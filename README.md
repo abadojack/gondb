@@ -1,4 +1,7 @@
-gondb provides structs and functions for accessing the National Nutrient Database for Standard Reference API.
+gondb provides structs and functions for accessing the [National Nutrient Database for Standard Reference](http://ndb.nal.usda.gov/ndb/doc/) API.
+
+gondb implements the endpoints defined in the documentation: http://ndb.nal.usda.gov/ndb/doc/.
+More detailed information about the behavior of each particular endpoint can be found at the official documentation of the API.
 
 [![GoDoc](https://godoc.org/github.com/PuerkitoBio/goquery?status.png)](http://godoc.org/github.com/abadojack/gondb)
 
