@@ -40,7 +40,7 @@ Check the NDB documentation for the various parameters for each endpoint.
 ## Usage Example
 
 ```Go
-//A program to display the names and quantity of each nutrient in a raw mango.
+//A program to display the name and quantity of each nutrient in a raw mango.
 package main
 
 import (
