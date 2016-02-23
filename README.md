@@ -1,7 +1,8 @@
+[![Build Status](https://travis-ci.org/abadojack/gondb.svg?branch=master)](https://travis-ci.org/abadojack/gondb)
+
 # gondb
 
 [![GoDoc](https://godoc.org/github.com/abadojack/gondb?status.png)](http://godoc.org/github.com/abadojack/gondb)
-
 
 gondb is a simple, transparent Go package for accessing the  [National Nutrient Database for Standard Reference](http://ndb.nal.usda.gov/ndb/doc/) API.
 
@@ -20,7 +21,7 @@ Examples
 ## Authentication
 
 A data.gov API key must be incorporated into each API request. [Sign up](http:ndb.nal.usda.gov/ndb/doc/#) now if you do not have a key.
-```Go	
+```Go
 api := NewClient(nil, "your-api-key")
 ```
 
