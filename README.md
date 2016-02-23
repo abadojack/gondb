@@ -4,7 +4,7 @@
 
 [![GoDoc](https://godoc.org/github.com/abadojack/gondb?status.png)](http://godoc.org/github.com/abadojack/gondb)
 
-gondb is a simple, transparent Go package for accessing the  [National Nutrient Database for Standard Reference](http://ndb.nal.usda.gov/ndb/doc/) API.
+gondb is a simple, transparent Go package for accessing the [National Nutrient Database for Standard Reference](http://ndb.nal.usda.gov/ndb/doc/) API.
 
 Successful API queries return native Go structs that can be used immediately, with no need for type assertions.
 
