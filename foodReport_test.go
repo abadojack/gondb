@@ -1,8 +1,11 @@
 package gondb
 
-import "testing"
+import (
+	"os"
+	"testing"
+)
 
-const APIKEY = "DEMO_KEY"
+var APIKEY = os.Getenv("NDB_API_KEY")
 
 func Test_GetFoodReport(t *testing.T) {
 	api := NewClient(nil, APIKEY)
