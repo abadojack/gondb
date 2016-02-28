@@ -30,7 +30,7 @@ api := NewClient(nil, "your-api-key")
 The Parameters struct contains all parameters required by the endpoints.
 
 ```Go
-p := &Parameters{
+p := &gondb.Parameters{
 	NdbNo: "01009",
 	Type:  "f",
 }
