@@ -93,7 +93,8 @@ func NewClient(httpClient *http.Client, apiKey string) *Client {
 	if httpClient == nil {
 		httpClient = http.DefaultClient
 	}
-
+	
+	//Use DEMO_KEY if no api key is provided.
 	if len(apiKey) == 0 {
 		apiKey = "DEMO_KEY"
 	}
