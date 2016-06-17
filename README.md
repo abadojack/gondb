@@ -1,8 +1,6 @@
-[![Build Status](https://travis-ci.org/abadojack/gondb.svg?branch=master)](https://travis-ci.org/abadojack/gondb)
-
 # gondb
 
-[![GoDoc](https://godoc.org/github.com/abadojack/gondb?status.png)](http://godoc.org/github.com/abadojack/gondb)
+[![Build Status](https://travis-ci.org/abadojack/gondb.svg?branch=master)](https://travis-ci.org/abadojack/gondb)  [![GoDoc](https://godoc.org/github.com/abadojack/gondb?status.png)](http://godoc.org/github.com/abadojack/gondb)
 
 gondb is a simple, transparent Go package for accessing the [National Nutrient Database for Standard Reference](http://ndb.nal.usda.gov/ndb/doc/) API.
 
@@ -18,22 +16,38 @@ Examples
 
 	$ go get -u github.com/abadojack/gondb
 
+##Usage
+
+```Go
+	import "github.com/abadojack/gondb"
+```
+
 ## Authentication
 
 A data.gov API key must be incorporated into each API request. [Sign up](http:ndb.nal.usda.gov/ndb/doc/#) now if you do not have a key.
 ```Go
-api := NewClient(nil, "your-api-key")
+api := gondb.NewClient(nil, "your-api-key")
 ```
 
-## Parameters
+## Queries
 
-The Parameters struct contains all parameters required by the endpoints.
-
+Executing queries is simple.
 ```Go
-p := &gondb.Parameters{
-	NdbNo: "01009",
-	Type:  "f",
-}
+	result, _ := api.Search("cheese", nil)
+	for _, item := range result.Items {
+		fmt.Println(item.Ndbno)
+	}
+```
+
+The endpoints allow separate optional parameter; if desired, these can be passed as the final parameter.
+```Go
+	v := url.Values{}
+	v.Set("ndbno", "01009")
+	v.Set("type", "f")
+
+	nutrientIDs := []string{"204", "205", "269"}
+
+	report, _ := api.GetNutrientReport(nutrientIDs, v)
 ```
 
 Check the NDB documentation for the various parameters for each endpoint.
@@ -45,40 +59,33 @@ Check the NDB documentation for the various parameters for each endpoint.
 package main
 
 import (
-        "fmt"
-        "github.com/abadojack/gondb"
+	"fmt"
+
+	"github.com/abadojack/gondb"
 )
 
 func main() {
-api := gondb.NewClient(nil, "DEMO_KEY")
+	api := gondb.NewClient(nil, "DEMO_KEY")
 
-p := &gondb.Parameters{
-        Query: "raw mango",
-    }
+	result, err := api.Search("fried chicken", nil)
 
-    result, err := api.Search(p)
+	if err != nil {
+		panic(err)
+	}
 
-    if err != nil {
-        panic(err)
-    }
+	if len(result.Items) > 0 {
+		for _, item := range result.Items {
+			report, err := api.GetFoodReport(item.Ndbno, nil)
+			if err != nil {
+				panic(err)
+			}
 
-    if len(result.Items) > 0 {
-        for _, item := range result.Items {
-            p1 := &gondb.Parameters{
-                	NdbNo: item.Ndbno,
-              	}
+			for _, nutrient := range report.Food.Nutrients {
+				fmt.Println(nutrient.Name, nutrient.Value, nutrient.Unit)
+			}
 
-            report, err := api.GetFoodReport(p1)
-            if err != nil {
-                panic(err)
-            }
-
-            for _, nutrient := range report.FoodDetails.Nutrients {
-                fmt.Println(nutrient.Name, nutrient.Value, nutrient.Unit)
-            }
-
-        }
-    }
+		}
+	}
 }
 ```
 

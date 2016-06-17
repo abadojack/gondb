@@ -9,37 +9,24 @@
 //
 //	api := NewClient(nil, "your-api-key")
 //
-//Parameters
-//
-//The Parameters struct contains all parameters required by the endpoints.
-//
-//	p := &Parameters{
-//		NdbNo: "01009",
-//		Type:  "f",
-//	}
-//
-//Check the NDB documentation for the various parameters for each endpoint.
-//
 //
 //Queries
 //
 //Executing queries is simple.
 //
-//Example 0:
-//
-//	p := &Parameters{
-//		Query: "raw mangoes",
+//	result, _ := api.Search("cheese", nil)
+//	for _, item := range result.Items {
+//		fmt.Println(item.Ndbno)
 //	}
-//	s, err := api.Search(p)
 //
-//Example 1:
+//The endpoints allow separate optional parameter; if desired, these can be passed as the final parameter.
+//	v := url.Values{}
+//	v.Set("ndbno", "01009")
+//	v.Set("type", "f")
 //
-//	p := &Parameters{
-//		Max:       "12",
-//		Nutrients: []int{208, 204, 205, 269},
-//		NdbNo:     "01009",
-//	}
-//	r, err := api.GetNutrientReport(p)
+//	nutrientIDs := []string{"204", "205", "269"}
+//
+//	report, _ := api.GetNutrientReport(nutrientIDs, v)
 //
 //Endpoints
 //
@@ -50,42 +37,28 @@ package gondb
 
 import (
 	"encoding/json"
-	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
-
-	"github.com/google/go-querystring/query"
 )
 
+//BaseURL represents the base URL for API requests.
 const (
-	baseURL = "http://api.nal.usda.gov/ndb/"
+	BaseURL = "http://api.nal.usda.gov/ndb/"
 )
 
 //Client represents an NDB API client.
 type Client struct {
 	HTTPClient *http.Client
 
-	//BaseURL for API requests.
-	BaseURL *url.URL
-
 	//APIKey required to use the NDB API. Must be a data.gov registered API key.
 	APIKey string
 }
 
-//Parameters represents API request parameters.
-type Parameters struct {
-	Format    string   `url:"format,omitempty"` //json or xml ... always json
-	Type      string   `url:"type,omitempty"`   //[b]asic or [f]ull or [s]tats
-	NdbNo     string   `url:"ndbno,omitempty"`
-	APIKey    string   `url:"api_key,omitempty"`
-	Query     string   `url:"q,omitempty"`
-	FoodGroup []string `url:"fg,omitempty"`
-	Sort      string   `url:"sort,omitempty"`
-	Max       string   `url:"max,omitempty"`
-	Offset    string   `url:"offset,omitempty"`
-	Nutrients []int    `url:"nutrients,omitempty"`
-	Subset    int      `url:"subset,omitempty"`
-	ListType  string   `url:"lt"`
+//APIError represents an code/message error pair returned by the API.
+type APIError struct {
+	Code    string `json:"code"`
+	Message string `json:"message"`
 }
 
 //NewClient returns a new NDB API client. http.Default will be used if no httpClient is provided.
@@ -93,43 +66,28 @@ func NewClient(httpClient *http.Client, apiKey string) *Client {
 	if httpClient == nil {
 		httpClient = http.DefaultClient
 	}
-	
-	//Use DEMO_KEY if no api key is provided.
+
 	if len(apiKey) == 0 {
-		apiKey = "DEMO_KEY"
+		panic("No API key was supplied. Get one at http://api.nal.usda.gov")
 	}
 
-	baseURL, _ := url.Parse(baseURL)
-
-	c := &Client{
+	return &Client{
 		APIKey:     apiKey,
-		BaseURL:    baseURL,
 		HTTPClient: httpClient,
 	}
-
-	return c
 }
 
-func (c *Client) apiGet(endpoint string, param *Parameters, data interface{}) error {
-	if param == nil {
-		param = new(Parameters)
-	}
-	param.APIKey = c.APIKey
-	param.Format = "json" // Must always be json.
-
-	v, err := query.Values(param)
-	if err != nil {
-		return err
+func (c *Client) apiGet(endpoint string, form url.Values, data interface{}) error {
+	if form == nil {
+		form = url.Values{}
 	}
 
-	rel, err := url.Parse(endpoint + v.Encode())
-	if err != nil {
-		return err
-	}
+	form.Set("api_key", c.APIKey)
+	form.Set("format", "json")
 
-	u := c.BaseURL.ResolveReference(rel)
+	urlStr := BaseURL + endpoint + form.Encode()
 
-	req, err := http.NewRequest("GET", u.String(), nil)
+	req, err := http.NewRequest("GET", urlStr, nil)
 	if err != nil {
 		return err
 	}
@@ -140,10 +98,16 @@ func (c *Client) apiGet(endpoint string, param *Parameters, data interface{}) er
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return errors.New(resp.Status)
+		var apiError map[string]APIError
+		json.NewDecoder(resp.Body).Decode(&apiError) //This ain't cool.
+		return apiError["error"]
 	}
 
 	defer resp.Body.Close()
 
 	return json.NewDecoder(resp.Body).Decode(data)
+}
+
+func (e APIError) Error() string {
+	return fmt.Sprintf("%s : %s", e.Code, e.Message)
 }

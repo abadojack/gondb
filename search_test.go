@@ -1,24 +1,22 @@
 package gondb
 
-import "testing"
+import (
+	"net/url"
+	"testing"
+)
 
 func Test_Search(t *testing.T) {
-	api := NewClient(nil, APIKEY)
+	v := url.Values{}
+	v.Set("max", "16")
 
-	p := &Parameters{
-		Query: "raw mango",
-		Max:   "16",
-		Sort:  "r",
-	}
-	_, err := api.Search(p)
-	if err != nil {
-		t.Fatal(err)
-	}
+	queries := []string{"", "butter", "raw mango"}
+	sort := []string{"r", "n"}
 
-	p.Query = "butter"
-	p.Sort = "n"
-	_, err = api.Search(p)
-	if err != nil {
-		t.Fatal(err)
+	for key, query := range queries {
+		v.Set("sort", sort[key%2]) // alternate btn "n" and "r"
+		_, err := api.Search(query, v)
+		if err != nil {
+			t.Fatal(err)
+		}
 	}
 }

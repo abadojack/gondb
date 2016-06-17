@@ -1,22 +1,21 @@
 package gondb
 
-import "errors"
+import "net/url"
 
 //Search request sends keyword queries and returns lists of foods which contain
 //one or more of the keywords in the food description, scientific name, or commerical name fields.
-func (c Client) Search(param *Parameters) (SearchResultList, error) {
-	if param == nil || len(param.Query) == 0 {
-		return SearchResultList{}, errors.New("Parameter Query must not be empty")
-	}
-
+func (c Client) Search(searchTerm string, v url.Values) (SearchResultList, error) {
 	var list map[string]SearchResultList
 
-	err := c.apiGet("search/?", param, &list)
-	if err != nil {
-		return SearchResultList{}, err
+	if v == nil {
+		v = url.Values{}
 	}
 
-	return list["list"], nil
+	v.Set("q", searchTerm)
+
+	err := c.apiGet("search/?", v, &list)
+
+	return list["list"], err
 }
 
 //SearchResultList represents information about the items returned.

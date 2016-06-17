@@ -1,15 +1,17 @@
 package gondb
 
-import "errors"
+import "net/url"
 
 //GetFoodReport obtains nutrient reports on individual foods.
-func (c Client) GetFoodReport(param *Parameters) (FoodReport, error) {
-	if param == nil {
-		return FoodReport{}, errors.New("Parameter NdbNo must not be empty")
-	}
-
+func (c Client) GetFoodReport(Ndbno string, v url.Values) (FoodReport, error) {
 	var report map[string]FoodReport
-	err := c.apiGet("reports/?", param, &report)
+
+	if v == nil {
+		v = url.Values{}
+	}
+	v.Set("ndbno", Ndbno)
+
+	err := c.apiGet("reports/?", v, &report)
 
 	return report["report"], err
 }
@@ -18,33 +20,33 @@ func (c Client) GetFoodReport(param *Parameters) (FoodReport, error) {
 type FoodReport struct {
 	StdReleaseVersion string     `json:"sr"` //Standard Release version of the data being reported
 	Type              string     `json:"type"`
-	FoodDetails       Food       `json:"food"`
-	Sources           []Source   `json:"sources"`
+	Food              Food       `json:"food"`
+	Sources           []Sources  `json:"sources"`
 	FootNotes         []Footnote `json:"footnotes"`
 	Languals          []Langual  `json:"language"`
 }
 
 //Food represents metadata elements for a food.
 type Food struct {
-	NdbNo              string     `json:"nodno"`
-	Name               string     `json:"name"`
-	FoodGroup          string     `json:"fg"`
-	ScientificName     string     `json:"sn"`
-	CommercialName     string     `json:"cn"`
-	Manufacturer       string     `json:"manu"`
-	NitrogenFactor     float64    `json:"nf"`
-	CarbohydrateFactor float64    `json:"cf"`
-	FatFactor          float64    `json:"ff"`
-	ProteinFactor      float64    `json:"pf"`
-	Refuse             string     `json:"r"`
-	RefuseDescription  string     `json:"rd"`
-	Nutrients          []Nutrient `json:"nutrients"`
-	Weight             float64    `json:"weight"`
-	FoodMeasure        string     `json:"measures"`
+	NdbNo              string      `json:"nodno"`
+	Name               string      `json:"name"`
+	FoodGroup          string      `json:"fg"`
+	ScientificName     string      `json:"sn"`
+	CommercialName     string      `json:"cn"`
+	Manufacturer       string      `json:"manu"`
+	NitrogenFactor     float64     `json:"nf"`
+	CarbohydrateFactor float64     `json:"cf"`
+	FatFactor          float64     `json:"ff"`
+	ProteinFactor      float64     `json:"pf"`
+	Refuse             string      `json:"r"`
+	RefuseDescription  string      `json:"rd"`
+	Nutrients          []Nutrients `json:"nutrients"`
+	Weight             float64     `json:"weight"`
+	FoodMeasure        string      `json:"measures"`
 }
 
-//Nutrient represents metadata elements for each nutrient.
-type Nutrient struct {
+//Nutrients represents metadata elements for each nutrient.
+type Nutrients struct {
 	ID            interface{} `json:"nutrient_id"` //Can either be string or int
 	Name          string      `json:"name"`
 	Group         string      `json:"group"`
@@ -53,20 +55,20 @@ type Nutrient struct {
 	SourceCode    interface{} `json:"sourcecode"`
 	Dp            interface{} `json:"dp"`
 	StandardError string      `json:"se"`
-	Measures      []Measure   `json:"measures"`
+	Measures      []Measures  `json:"measures"`
 	Gm            interface{} `json:"gm"` //Can either be float64 or string i.e "--"
 }
 
-//Measure represents list of measures reported for a nutrient.
-type Measure struct {
+//Measures represents list of measures reported for a nutrient.
+type Measures struct {
 	Label      string      `json:"label"`
 	Equivalent float64     `json:"eqv"`
 	Value      interface{} `json:"value"` //Can either be string or float64
 	Quantity   float64     `json:"qty"`
 }
 
-//Source represents reference source, usually a bibliographic citation, for the food.
-type Source struct {
+//Sources represents reference source, usually a bibliographic citation, for the food.
+type Sources struct {
 	ID      int    `json:"id"`
 	Title   string `json:"title"`
 	Authors string `json:"authors"`
@@ -77,6 +79,7 @@ type Source struct {
 	End     string `json:"end"`
 }
 
+//Footnote represents an id/text pair of a footnote
 type Footnote struct {
 	Idv         string `json:"idv"`
 	Description string `json:"desc"`
